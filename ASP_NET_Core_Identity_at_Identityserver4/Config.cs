@@ -5,24 +5,36 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
 {
     public static class Config
     {
+        /// <summary>
+        /// Так звані ресурси що собою являють типи ідентифікації користувачів
+        /// </summary>
         public static IEnumerable<IdentityResource> IdentityResources =>
                    new IdentityResource[]
                    {
-                new IdentityResources.OpenId(),
-                new IdentityResources.Profile(),
+                        new IdentityResources.OpenId(),
+                        new IdentityResources.Profile(),
                    };
 
+        /// <summary>
+        /// Тут зберігаються так звані "Scope" які собою явдяють різновиди прав доступу до тих чи інших полів чи даних
+        /// </summary>
+        /// <remarks>
+        /// Наприклад scope1 буде містити доступ до полів повязаних з авторизацією, але не міститиме доступ до файлів користувача і тд...
+        /// </remarks>
         public static IEnumerable<ApiScope> ApiScopes =>
             new ApiScope[]
             {
-                new ApiScope("scope1"),
-                new ApiScope("scope2"),
+                new ApiScope(IdentityConstants.ApiScope_Level1),//scope1
+                new ApiScope(IdentityConstants.ApiScope_Level2),//scope2
             };
 
+        /// <summary>
+        /// Тут перераховані клієнти які будуть мамти доступ певних рівнів з певним видом шифрування даних а також з певним видом грантів дозволів 
+        /// </summary>
         public static IEnumerable<Client> Clients =>
             new Client[]
             {
-                // m2m client credentials flow client
+                // Клієнт потоку облікових даних клієнта m2m
                 new Client
                 {
                     ClientId = "m2m.client",
@@ -31,10 +43,10 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
                     AllowedGrantTypes = GrantTypes.ClientCredentials,
                     ClientSecrets = { new Secret("511536EF-F270-4058-80CA-1C89C192F69A".Sha256()) },
 
-                    AllowedScopes = { "scope1" }
+                    AllowedScopes = { IdentityConstants.ApiScope_Level1 }
                 },
 
-                // interactive client using code flow + pkce
+                // Інтерактивний клієнт із використанням потоку коду + pkce
                 new Client
                 {
                     ClientId = "interactive",
@@ -47,7 +59,7 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
                     PostLogoutRedirectUris = { "https://localhost:44300/signout-callback-oidc" },
 
                     AllowOfflineAccess = true,
-                    AllowedScopes = { "openid", "profile", "scope2" }
+                    AllowedScopes = { "openid", "profile", IdentityConstants.ApiScope_Level2 }
                 },
             };
     }

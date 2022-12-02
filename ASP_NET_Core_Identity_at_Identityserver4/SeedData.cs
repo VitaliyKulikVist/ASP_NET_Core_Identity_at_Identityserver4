@@ -11,8 +11,16 @@ using System.Security.Claims;
 
 namespace ASP_NET_Core_Identity_at_Identityserver4
 {
+    /// <summary>
+    /// Клас необхідний для звязку з БД а також заповненням її початковими\тестовими даними
+    /// </summary>
     public class SeedData
     {
+        /// <summary>
+        /// Метод в якому відбувається з'єднання з <paramref name="UseSqlite"/> Базою данних а також створення нових записів авторазиції в таблиці
+        /// </summary>
+        /// <param name="connectionString"></param>
+        /// <exception cref="Exception"></exception>
         public static void EnsureSeedData(string connectionString)
         {
             var services = new ServiceCollection();

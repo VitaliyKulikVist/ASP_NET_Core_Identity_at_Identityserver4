@@ -14,9 +14,9 @@ namespace ASP_NET_Core_Identity_at_Identityserver4.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            // Customize the ASP.NET Identity model and override the defaults if needed.
-            // For example, you can rename the ASP.NET Identity table names and more.
-            // Add your customizations after calling base.OnModelCreating(builder);
+            // Налаштуйте модель ASP.NET Identity і замініть значення за замовчуванням, якщо потрібно.
+            // Наприклад, ви можете перейменувати імена таблиць ASP.NET Identity тощо.
+            // Додайте свої налаштування після виклику base.OnModelCreating(builder);
         }
     }
 }

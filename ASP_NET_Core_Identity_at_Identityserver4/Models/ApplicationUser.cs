@@ -2,8 +2,14 @@
 
 namespace ASP_NET_Core_Identity_at_Identityserver4.Models
 {
-    // Add profile data for application users by adding properties to the ApplicationUser class
+    /// <summary>
+    /// Додайте дані профілю для користувачів програми, додавши властивості до класу ApplicationUser
+    /// </summary>
     public class ApplicationUser : IdentityUser
     {
+        /// <summary>
+        /// Поле яке буде містити опис користувача
+        /// </summary>
+        public string Description { get; set; } = "Пустий опис користувача";
     }
 }
