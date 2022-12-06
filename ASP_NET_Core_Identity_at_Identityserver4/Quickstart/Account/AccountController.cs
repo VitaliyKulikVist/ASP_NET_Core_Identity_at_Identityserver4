@@ -1,8 +1,4 @@
-﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-
-
-using ASP_NET_Core_Identity_at_Identityserver4.Models;
+﻿using ASP_NET_Core_Identity_at_Identityserver4.Models;
 using IdentityModel;
 using IdentityServer4.Events;
 using IdentityServer4.Extensions;
@@ -21,7 +17,7 @@ using System.Threading.Tasks;
 namespace IdentityServerHost.Quickstart.UI
 {
     [SecurityHeaders]
-    [AllowAnonymous]
+    [AllowAnonymous] //Атрибут вказує, що клас або метод, до якого застосовано цей атрибут, не потребують авторизації
     public class AccountController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -48,7 +44,7 @@ namespace IdentityServerHost.Quickstart.UI
         }
 
         /// <summary>
-        /// Entry point into the login workflow
+        /// Точка входу в робочий процес входу
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Login(string returnUrl)
@@ -66,30 +62,30 @@ namespace IdentityServerHost.Quickstart.UI
         }
 
         /// <summary>
-        /// Handle postback from username/password login
+        /// Обробка зворотного зв’язку від імені користувача/паролю
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginInputModel model, string button)
         {
-            // check if we are in the context of an authorization request
+            // перевірити, чи ми знаходимося в контексті запиту авторизації
             var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
 
-            // the user clicked the "cancel" button
+            // користувач натиснув кнопку «скасувати».
             if (button != "login")
             {
                 if (context != null)
                 {
-                    // if the user cancels, send a result back into IdentityServer as if they 
-                    // denied the consent (even if this client does not require consent).
-                    // this will send back an access denied OIDC error response to the client.
+                    // якщо користувач скасовує, надішліть результат назад на IdentityServer,
+                    // ніби він відмовив у згоді (навіть якщо цей клієнт не вимагає згоди).
+                    // це надішле клієнту відповідь про помилку OIDC заборонено доступ
                     await _interaction.DenyAuthorizationAsync(context, AuthorizationError.AccessDenied);
 
-                    // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
+                    // ми можемо довіряти model.ReturnUrl, оскільки GetAuthorizationContextAsync повернув ненульове значення
                     if (context.IsNativeClient())
                     {
-                        // The client is native, so this change in how to
-                        // return the response is for better UX for the end user.
+                        // Клієнт є нативним, тому ця зміна способу повернення відповіді призначена
+                        // для кращого UX для кінцевого користувача.
                         return this.LoadingPage("Redirect", model.ReturnUrl);
                     }
 
@@ -97,7 +93,7 @@ namespace IdentityServerHost.Quickstart.UI
                 }
                 else
                 {
-                    // since we don't have a valid context, then we just go back to the home page
+                    // оскільки ми не маємо дійсного контексту, ми просто повертаємося на домашню сторінку
                     return Redirect("~/");
                 }
             }
@@ -114,16 +110,16 @@ namespace IdentityServerHost.Quickstart.UI
                     {
                         if (context.IsNativeClient())
                         {
-                            // The client is native, so this change in how to
-                            // return the response is for better UX for the end user.
+                            // Клієнт є нативним, тому ця зміна способу
+                            // повернення відповіді призначена для кращого UX для кінцевого користувача.
                             return this.LoadingPage("Redirect", model.ReturnUrl);
                         }
 
-                        // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
+                        // ми можемо довіряти model.ReturnUrl, оскільки GetAuthorizationContextAsync повернув ненульове значення
                         return Redirect(model.ReturnUrl);
                     }
 
-                    // request for a local page
+                    // запит на локальну сторінку
                     if (Url.IsLocalUrl(model.ReturnUrl))
                     {
                         return Redirect(model.ReturnUrl);
@@ -134,7 +130,7 @@ namespace IdentityServerHost.Quickstart.UI
                     }
                     else
                     {
-                        // user might have clicked on a malicious link - should be logged
+                        // користувач міг натиснути на зловмисне посилання - слід зареєструватися
                         throw new Exception("invalid return URL");
                     }
                 }
@@ -143,25 +139,25 @@ namespace IdentityServerHost.Quickstart.UI
                 ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
             }
 
-            // something went wrong, show form with error
+            // щось пішло не так, показати форму з помилкою
             var vm = await BuildLoginViewModelAsync(model);
             return View(vm);
         }
 
 
         /// <summary>
-        /// Show logout page
+        /// Показати сторінку виходу
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Logout(string logoutId)
         {
-            // build a model so the logout page knows what to display
+            // створити модель, щоб сторінка виходу знала, що відображати
             var vm = await BuildLogoutViewModelAsync(logoutId);
 
             if (vm.ShowLogoutPrompt == false)
             {
-                // if the request for logout was properly authenticated from IdentityServer, then
-                // we don't need to show the prompt and can just log the user out directly.
+                // якщо запит на вихід було належним чином автентифіковано на IdentityServer,
+                // тоді нам не потрібно показувати підказку, і ми можемо просто вийти з системи безпосередньо.
                 return await Logout(vm);
             }
 
@@ -169,33 +165,34 @@ namespace IdentityServerHost.Quickstart.UI
         }
 
         /// <summary>
-        /// Handle logout page postback
+        /// Обробляти зворотне повідомлення сторінки виходу
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout(LogoutInputModel model)
         {
-            // build a model so the logged out page knows what to display
+            // створити модель, щоб сторінка, яка вийшла з системи, знала, що відображати
             var vm = await BuildLoggedOutViewModelAsync(model.LogoutId);
 
             if (User?.Identity.IsAuthenticated == true)
             {
-                // delete local authentication cookie
+                // видалити файл cookie локальної автентифікації
                 await _signInManager.SignOutAsync();
 
-                // raise the logout event
+                // викликати подію виходу
                 await _events.RaiseAsync(new UserLogoutSuccessEvent(User.GetSubjectId(), User.GetDisplayName()));
             }
 
-            // check if we need to trigger sign-out at an upstream identity provider
+            // перевірити, чи потрібно нам ініціювати вихід із облікового запису
+            // у вищестоящого постачальника ідентифікаційної інформації
             if (vm.TriggerExternalSignout)
             {
-                // build a return URL so the upstream provider will redirect back
-                // to us after the user has logged out. this allows us to then
-                // complete our single sign-out processing.
+                // створіть зворотну URL-адресу, щоб вихідний постачальник перенаправляв
+                // назад до нас після того, як користувач вийшов із системи.
+                // це дозволяє нам завершити обробку єдиного виходу.
                 string url = Url.Action("Logout", new { logoutId = vm.LogoutId });
 
-                // this triggers a redirect to the external provider for sign-out
+                // це запускає переспрямування до зовнішнього постачальника для виходу
                 return SignOut(new AuthenticationProperties { RedirectUri = url }, vm.ExternalAuthenticationScheme);
             }
 
@@ -210,7 +207,7 @@ namespace IdentityServerHost.Quickstart.UI
 
 
         /*****************************************/
-        /* helper APIs for the AccountController */
+        /* допоміжні API для AccountController */
         /*****************************************/
         private async Task<LoginViewModel> BuildLoginViewModelAsync(string returnUrl)
         {
@@ -219,7 +216,7 @@ namespace IdentityServerHost.Quickstart.UI
             {
                 var local = context.IdP == IdentityServer4.IdentityServerConstants.LocalIdentityProvider;
 
-                // this is meant to short circuit the UI and only trigger the one external IdP
+                // це призначено для короткого замикання інтерфейсу користувача та запуску лише одного зовнішнього IdP
                 var vm = new LoginViewModel
                 {
                     EnableLocalLogin = local,
@@ -284,7 +281,7 @@ namespace IdentityServerHost.Quickstart.UI
 
             if (User?.Identity.IsAuthenticated != true)
             {
-                // if the user is not authenticated, then just show logged out page
+                // якщо користувач не автентифікований, то просто показати сторінку виходу з системи
                 vm.ShowLogoutPrompt = false;
                 return vm;
             }
@@ -292,19 +289,20 @@ namespace IdentityServerHost.Quickstart.UI
             var context = await _interaction.GetLogoutContextAsync(logoutId);
             if (context?.ShowSignoutPrompt == false)
             {
-                // it's safe to automatically sign-out
+                // це безпечно для автоматичного виходу
                 vm.ShowLogoutPrompt = false;
                 return vm;
             }
 
-            // show the logout prompt. this prevents attacks where the user
-            // is automatically signed out by another malicious web page.
+            // показати підказку виходу. це запобігає атакам, коли користувач автоматично
+            // виходить із системи на іншій шкідливій веб-сторінці
             return vm;
         }
 
         private async Task<LoggedOutViewModel> BuildLoggedOutViewModelAsync(string logoutId)
         {
-            // get context information (client name, post logout redirect URI and iframe for federated signout)
+            // отримати контекстну інформацію (ім’я клієнта,
+            // URI перенаправлення після виходу з системи та iframe для об’єднаного виходу)
             var logout = await _interaction.GetLogoutContextAsync(logoutId);
 
             var vm = new LoggedOutViewModel
@@ -326,9 +324,10 @@ namespace IdentityServerHost.Quickstart.UI
                     {
                         if (vm.LogoutId == null)
                         {
-                            // if there's no current logout context, we need to create one
-                            // this captures necessary info from the current logged in user
-                            // before we signout and redirect away to the external IdP for signout
+                            // якщо немає поточного контексту виходу, нам потрібно створити такий,
+                            // який фіксуватиме необхідну інформацію від поточного користувача,
+                            // який увійшов у систему, перш ніж вийти з системи та переспрямувати його
+                            // до зовнішнього IdP для виходу
                             vm.LogoutId = await _interaction.CreateLogoutContextAsync();
                         }
 

@@ -10,8 +10,16 @@ using System.Linq;
 
 namespace ASP_NET_Core_Identity_at_Identityserver4
 {
+    /// <summary>
+    /// Головний клас 
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// Головний метод застосунку, з якого починається робота програми
+        /// </summary>
+        /// <param name="args">Параметри які можуть вплинути на роботу застосунку в ході запуску</param>
+        /// <returns></returns>
         public static int Main(string[] args)
         {
             AddAndConfiguredLogger();
@@ -59,7 +67,7 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+                //.MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
                 .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
                 .Enrich.FromLogContext()
@@ -83,7 +91,13 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
             Log.Information("База данних заповнена.\t{timeFinish}", timeFinish);
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+        /// <summary>
+        /// Метод в якому відбувається створення конфігурування <see cref="IHostBuilder"/> 
+        /// </summary>
+        /// <param name="args">Вхідні параметри аргументів в яких можна додати додаткові налаштування для конфігурування
+        /// які будуть використовуватись при запуску застосунку</param>
+        /// <returns>Буде повернуто зконфігурований <see cref="IHostBuilder"/></returns>
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>

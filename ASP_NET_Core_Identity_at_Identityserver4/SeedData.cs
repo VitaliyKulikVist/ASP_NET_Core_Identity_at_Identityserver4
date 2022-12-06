@@ -20,7 +20,7 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
         /// Метод в якому відбувається з'єднання з <paramref name="UseSqlite"/> Базою данних а також створення нових записів авторазиції в таблиці
         /// </summary>
         /// <param name="connectionString"></param>
-        /// <exception cref="Exception"></exception>
+        /// <exception cref="Exception">Якщо <paramref name="result.Succeeded"/> == false </exception>
         public static void EnsureSeedData(string connectionString)
         {
             var services = new ServiceCollection();
