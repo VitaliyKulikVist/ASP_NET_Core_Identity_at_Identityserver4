@@ -11,6 +11,12 @@ using Microsoft.Extensions.Hosting;
 
 namespace ASP_NET_Core_Identity_at_Identityserver4
 {
+    /// <summary>
+    /// Головний клас в якому відбувається підключення сервісів конфігурування налаштувань для роботи арі
+    /// </summary>
+    /// <remarks>
+    /// 
+    /// </remarks>
     public class Startup
     {
         public IWebHostEnvironment Environment { get; }
