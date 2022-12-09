@@ -19,7 +19,20 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
     /// </remarks>
     public class Startup
     {
+        /// <summary>
+        /// Містить інформацію про середовище веб-хостингу у якому працює програма
+        /// </summary>
+        /// <remarks>
+        /// ApplicationName або шляхи до програми або "стани" програми
+        /// </remarks>
         public IWebHostEnvironment Environment { get; }
+
+        /// <summary>
+        /// Представляє набір властивостей конфігурації програми ключ/значення
+        /// </summary>
+        /// <remarks>
+        /// Містяться збережені та необхідні налаштування конфігурацій необхідних для сервісів\пакетів(бібліотек)
+        /// </remarks>
         public IConfiguration Configuration { get; }
 
         public Startup(IWebHostEnvironment environment, IConfiguration configuration)
@@ -30,14 +43,28 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
 
         public void ConfigureServices(IServiceCollection services)
         {
+            //додає в колекцію сервісів сервіси, які необхідні роботи контролерів MVC
             services.AddControllersWithViews();
 
+            ///<summary>
+            ///Hреєструється підклас DbContext з ім'ям ApplicationDbContext як служба із заданою областю 
+            ///в постачальнику служби додатків ASP.NET Core (тобто в контейнері впровадження залежностей). 
+            ///Контекст при цьому налаштовується для використання постачальника бази даних SQL Server 
+            ///та зчитування рядка підключення з конфігурації ASP.NET Core. 
+            ///Зазвичай немає значення, де в ConfigureServices виконується виклик до AddDbContext.
+            /// </summary>
+            /// <remarks>
+            /// DefaultConnection береться з appsettings.json з поля ConnectionStrings і рядка DefaultConnection
+            /// </remarks>
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+            {
+                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
+            });
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+            //Підключення сервісів необхідних для роботи AspNetCore.Identity
+            services.AddIdentity<ApplicationUser, IdentityRole>()//Додає стандартну конфігурацію системи ідентифікації для вказаних типів користувачів і ролей
+                .AddEntityFrameworkStores<ApplicationDbContext>()//Додає реалізацію Entity Framework сховищ ідентифікаційної інформації
+                .AddDefaultTokenProviders();//Додає постачальників токенів за замовчуванням, які використовуються для створення токенів для скидання паролів, зміни електронної пошти та номерів телефону, а також для генерації токенів двофакторної автентифікації
 
             var builder = services.AddIdentityServer(options =>
             {
