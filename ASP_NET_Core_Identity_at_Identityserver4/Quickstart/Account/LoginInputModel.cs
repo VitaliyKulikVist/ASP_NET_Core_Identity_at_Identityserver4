@@ -6,6 +6,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IdentityServerHost.Quickstart.UI
 {
+    /// <summary>
+    /// Клас в якому зберігаються необхідні для авторизації поля
+    /// </summary>
     public class LoginInputModel
     {
         [Required]

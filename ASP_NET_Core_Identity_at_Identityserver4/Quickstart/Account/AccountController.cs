@@ -16,6 +16,9 @@ using System.Threading.Tasks;
 
 namespace IdentityServerHost.Quickstart.UI
 {
+    /// <summary>
+    /// Цей клас є основною точкою входу в інтерфейс користувача
+    /// </summary>
     [SecurityHeaders]
     [AllowAnonymous] //Атрибут вказує, що клас або метод, до якого застосовано цей атрибут, не потребують авторизації
     public class AccountController : Controller
@@ -139,7 +142,8 @@ namespace IdentityServerHost.Quickstart.UI
                 ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
             }
 
-            // щось пішло не так, показати форму з помилкою
+            // Якщо все добре зібрати інформамцію яка необхідна для вікна авторизації і відобразити разом
+            // з способом авторизації відмінним від звичайного логіна і пароля(в даному прикладі гугл)
             var vm = await BuildLoginViewModelAsync(model);
             return View(vm);
         }

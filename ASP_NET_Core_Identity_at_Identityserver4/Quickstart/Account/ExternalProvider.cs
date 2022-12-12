@@ -1,9 +1,13 @@
-﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-
-
-namespace IdentityServerHost.Quickstart.UI
+﻿namespace IdentityServerHost.Quickstart.UI
 {
+    /// <summary>
+    /// Клас в якому міститься поля які відповідають за відображення для 
+    /// додаткових авторизацій будь то фейсбук, гугл тощо...
+    /// </summary>
+    /// <remarks>
+    /// Дана в ці поля назначаються автомамтично в момент коли формується сторінка 
+    /// авторизація і в стартапа програми були додані додаткові способи авторизації
+    /// </remarks>
     public class ExternalProvider
     {
         public string DisplayName { get; set; }
