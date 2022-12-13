@@ -1,6 +1,7 @@
 ﻿using ASP_NET_Core_Identity_at_Identityserver4.Data;
 using ASP_NET_Core_Identity_at_Identityserver4.Models;
 using IdentityServer4;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -12,8 +13,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ASP_NET_Core_Identity_at_Identityserver4
 {
@@ -71,11 +76,11 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
             /// Додає стандартну конфігурацію системи ідентифікації для вказаних типів користувачів і ролей
             /// </summary>
             services.AddIdentity<ApplicationUser, IdentityRole>()
-            /// <summary>
+                /// <summary>
                 /// Додає реалізацію Entity Framework сховищ ідентифікаційної інформації
                 /// </summary>
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-            /// <summary>
+                /// <summary>
                 /// Додає постачальників токенів за замовчуванням, які використовуються для створення 
                 /// токенів для скидання паролів, зміни електронної пошти та номерів телефону, 
                 /// а також для генерації токенів двофакторної автентифікації
@@ -146,7 +151,7 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
             /// <summary>
             /// Налаштування аудентифікації
             /// </summary>
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.AddAuthentication()
                 /// <summary>
                 /// Авторизація за допомогою Google
                 /// </summary>
@@ -178,12 +183,15 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
                     options.AppId = "Рядок в якому міститься Facebook:AppId який необхідно зкопіювати після реєстрації на сервісі фейсбук власного додатку";
                     options.AppSecret = "Рядок в якому міститься Facebook:AppSecret який необхідно зкопіювати після реєстрації на сервісі фейсбук власного додатку";
                     options.AccessDeniedPath = "/AccessDeniedPathInfo";
-                })
-                /// <summary>
-                /// Авторизація за допомогою JSON Web Token
-                /// </summary>
+                });
+
+            /// <summary>
+            /// Авторизація за допомогою JSON Web Token
+            /// </summary>
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
+                    /* Authority
                     /// <summary>
                     /// базова адреса вашого сервера ідентифікації
                     /// </summary>
@@ -191,7 +199,8 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
                     /// Отримує або встановлює Authority для використання під час здійснення викликів OpenIdConnect.
                     /// </remarks>
                     options.Authority = "https://demo.identityserver.io";
-
+                    */
+                    /* Audience
                     /// <summary>
                     /// якщо ви використовуєте ресурси API, ви можете вказати назву тут
                     /// </summary>
@@ -200,7 +209,62 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
                     /// будь-якого отриманого маркера OpenIdConnect. 
                     /// Це значення передається в TokenValidationParameters.ValidAudience, якщо ця властивість порожня.
                     /// </remarks>
-                    options.Audience = "resource1";
+                    options.Audience = IdentityConstants.ApiScope_Level1;
+                    */
+
+                    options.Authority = Configuration["Authority"];
+                    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+
+                            var accessToken = context.Request.Query["access_token"];
+
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/chathub")))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            //тільки для дебагу просто щоб подивитись як працює
+                            Log.Information("Message Received, AccessToken = {AccessToken}", accessToken);
+
+                            return Task.CompletedTask;
+                        },
+                        OnTokenValidated = context =>
+                        {
+                            var token = context.SecurityToken as JwtSecurityToken;
+                            if (token != null)
+                            {
+                                ClaimsIdentity identity = context.Principal.Identity as ClaimsIdentity;
+                                if (identity != null)
+                                {
+                                    identity.AddClaim(new Claim("access_token", token.RawData));
+                                }
+                            }
+
+                            //тільки для дебагу просто щоб подивитись як працює
+                            Log.Information("Token Validated {rawData}", token.RawData);
+
+                            return Task.CompletedTask;
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
+                            var textEror = context.Exception.Message;
+
+                            //тільки для дебагу просто щоб подивитись як працює
+                            Log.Error("Authentication Failed, becouse \t{failed}", textEror);
+
+                            return Task.CompletedTask;
+                        }
+                    };
+
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = false,
+                        NameClaimType = "name",
+                        RoleClaimType = "role"
+                    };
 
                     /// <summary>
                     /// IdentityServer видає заголовок typ за замовчуванням, рекомендована додаткова перевірка
@@ -213,6 +277,18 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
                     /// ЛИШЕ до внутрішнього заголовка маркера.
                     /// </remarks>
                     options.TokenValidationParameters.ValidTypes = new[] { "at+jwt" };
+                });
+
+            /// <summary>
+            /// Авторизація за допомогою Кукі (Cookie)
+            /// </summary>
+            /// <remarks>
+            /// 
+            /// </remarks>
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
                 });
         }
 
@@ -334,7 +410,15 @@ namespace ASP_NET_Core_Identity_at_Identityserver4
             /// </remarks>
             app.UseAuthorization();
 
-            
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <remarks>
+            /// Додає Microsoft.AspNetCore.Authentication.AuthenticationMiddleware до
+            /// зазначеного Microsoft.AspNetCore.Builder.IApplicationBuilder, 
+            /// що вмикає можливості автентифікації.
+            /// </remarks>
+            app.UseAuthentication();
 
             /// <summary>
             /// Метод app.UseEndpoints() вбудовує конвеєр обробки компонент EndpointMiddleware. 
